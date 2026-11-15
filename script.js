@@ -1,17 +1,22 @@
 
 // ==========================================
 // WEDDING COUNTDOWN
+// Wedding time: 25 November 2026, 2:00 PM IST
 // ==========================================
 
 const weddingDate = new Date("2026-11-25T14:00:00+05:30").getTime();
+const countdownElement = document.getElementById("countdown");
 
 function updateCountdown() {
-    const now = Date.now();
-    const diff = weddingDate - now;
 
-    if (diff <= 0) {
-        document.getElementById("countdown").innerHTML =
-            "<p>The celebration has begun. जय श्री झूलेलाल!</p>";
+    if (!countdownElement) return;
+
+    const now = Date.now();
+    const difference = weddingDate - now;
+
+    if (difference <= 0) {
+        countdownElement.innerHTML =
+            '<p class="countdown-finished">The celebration has begun!</p>';
         return;
     }
 
@@ -22,106 +27,29 @@ function updateCountdown() {
         seconds: 1000
     };
 
-    let remaining = diff;
+    let remaining = difference;
 
-    for (const [id, size] of Object.entries(units)) {
-        const value = Math.floor(remaining / size);
-        remaining %= size;
+    for (const [unit, milliseconds] of Object.entries(units)) {
 
-        document.getElementById(id).textContent =
-            String(value).padStart(2, "0");
+        const value = Math.floor(remaining / milliseconds);
+        remaining %= milliseconds;
+
+        const element = document.getElementById(unit);
+
+        if (element) {
+            element.textContent = String(value).padStart(2, "0");
+        }
     }
 }
 
 updateCountdown();
-setInterval(updateCountdown, 1000);
+
+window.setInterval(updateCountdown, 1000);
 
 
 // ==========================================
-// OPENING INVITATION ANIMATION
-// ==========================================
-
-const celebrationLayer = document.getElementById("celebrationLayer");
-
-
-
-// ==========================================
-// ELEGANT OPENING ANIMATION
-// No balloons or confetti
-// ==========================================
-
-const welcomeScreen = document.getElementById("welcomeScreen");
-const openInvitationButton = document.getElementById("openInvitation");
-
-openInvitationButton?.addEventListener("click", () => {
-
-    if (
-        !welcomeScreen ||
-        welcomeScreen.classList.contains("is-opening")
-    ) {
-        return;
-    }
-
-    // Unlock the invitation
-    document.body.classList.remove("invitation-locked");
-
-    // Start elegant opening transition
-    welcomeScreen.classList.add("is-opening");
-
-    // Remove opening screen after transition
-    window.setTimeout(() => {
-
-        welcomeScreen.classList.add("is-gone");
-        welcomeScreen.setAttribute("aria-hidden", "true");
-
-    }, 1000);
-
-});
-
-
-
-// ==========================================
-// OPEN INVITATION ON CLICK / TAP
-// ==========================================
-
-openInvitationButton?.addEventListener("click", () => {
-
-    if (
-        !welcomeScreen ||
-        welcomeScreen.classList.contains("is-opening")
-    ) {
-        return;
-    }
-
-    // Launch balloons and confetti
-    launchCelebration();
-
-    // Animate the opening screen
-    welcomeScreen.classList.add("is-opening");
-
-    // Allow scrolling
-    document.body.classList.remove("invitation-locked");
-
-    // Remove opening screen after animation
-    window.setTimeout(() => {
-
-        welcomeScreen.classList.add("is-gone");
-
-        welcomeScreen.setAttribute("aria-hidden", "true");
-
-        // Smoothly move to the main invitation
-        document.getElementById("home")?.scrollIntoView({
-            behavior: "smooth"
-        });
-
-    }, 850);
-
-});
-
-
-
-// ==========================================
-// PREMIUM SCROLL FADE-IN ANIMATIONS
+// SCROLL-REVEAL ANIMATIONS
+// Website opens directly without interaction.
 // ==========================================
 
 const revealElements = document.querySelectorAll(`
@@ -133,7 +61,6 @@ const revealElements = document.querySelectorAll(`
     .weekday,
     .event-grid,
     .venue,
-    .countdown-wrap,
     .family > .eyebrow,
     .family > h2,
     .family-list,
@@ -141,50 +68,151 @@ const revealElements = document.querySelectorAll(`
     .closing
 `);
 
-// Add animation class to every selected element
 revealElements.forEach((element, index) => {
 
     element.classList.add("scroll-reveal");
 
-    // Alternate photo entrance directions
     if (element.classList.contains("photo-card")) {
+
         element.classList.add(
             index % 2 === 0 ? "scroll-left" : "scroll-right"
         );
+
     }
 });
 
+if ("IntersectionObserver" in window) {
 
-// Observe elements while scrolling
-const scrollObserver = new IntersectionObserver(
+    const scrollObserver = new IntersectionObserver(
 
-    (entries, observer) => {
+        (entries, observer) => {
 
-        entries.forEach((entry) => {
+            entries.forEach((entry) => {
 
-            if (entry.isIntersecting) {
+                if (entry.isIntersecting) {
 
-                // Reveal element
-                entry.target.classList.add("visible");
+                    entry.target.classList.add("visible");
 
-                // Stop observing after animation
-                observer.unobserve(entry.target);
+                    observer.unobserve(entry.target);
 
-            }
+                }
 
-        });
+            });
 
-    },
+        },
 
-    {
-        threshold: 0.12,
-        rootMargin: "0px 0px -50px 0px"
+        {
+            threshold: 0.12,
+            rootMargin: "0px 0px -40px 0px"
+        }
+    );
+
+    revealElements.forEach((element) => {
+        scrollObserver.observe(element);
+    });
+
+} else {
+
+    // Fallback for older browsers.
+    revealElements.forEach((element) => {
+        element.classList.add("visible");
+    });
+
+}
+
+
+// ==========================================
+// WEDDING VIDEO MODAL
+// Opens when visitor taps Watch Wedding Video.
+// ==========================================
+
+const openWeddingVideoButton =
+    document.getElementById("openWeddingVideo");
+
+const closeWeddingVideoButton =
+    document.getElementById("closeWeddingVideo");
+
+const weddingVideoDialog =
+    document.getElementById("weddingVideoDialog");
+
+const weddingVideo =
+    document.getElementById("weddingVideo");
+
+
+// Close video and stop playback.
+function closeWeddingVideo() {
+
+    if (weddingVideo && !weddingVideo.paused) {
+        weddingVideo.pause();
     }
 
+    if (weddingVideoDialog?.open) {
+        weddingVideoDialog.close();
+    }
+}
+
+
+// Open video when the button is tapped.
+openWeddingVideoButton?.addEventListener("click", async () => {
+
+    if (!weddingVideoDialog) return;
+
+    if (typeof weddingVideoDialog.showModal === "function") {
+
+        weddingVideoDialog.showModal();
+
+    } else {
+
+        // Fallback for older browsers.
+        weddingVideoDialog.setAttribute("open", "");
+
+    }
+
+    // Start playback after the visitor's tap.
+    if (weddingVideo) {
+
+        try {
+
+            await weddingVideo.play();
+
+        } catch (error) {
+
+            // Visitor can use the visible video controls
+            // if automatic playback is unavailable.
+            console.info(
+                "Tap the video play control to start playback.",
+                error
+            );
+
+        }
+
+    }
+
+});
+
+
+// Close button.
+closeWeddingVideoButton?.addEventListener(
+    "click",
+    closeWeddingVideo
 );
 
 
-// Start observing all elements
-revealElements.forEach((element) => {
-    scrollObserver.observe(element);
+// Close when tapping outside the video.
+weddingVideoDialog?.addEventListener("click", (event) => {
+
+    if (event.target === weddingVideoDialog) {
+        closeWeddingVideo();
+    }
+
+});
+
+
+// Pause video whenever dialog closes.
+weddingVideoDialog?.addEventListener("close", () => {
+
+    if (weddingVideo && !weddingVideo.paused) {
+        weddingVideo.pause();
+    }
+
 });
