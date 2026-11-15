@@ -1497,3 +1497,372 @@ footer a {
         max-height: 62vh;
     }
 }
+
+/* ==========================================
+   SUNNY & DIPTI - WELCOME SCREEN
+========================================== */
+
+/* Lock the entire page while welcome screen is showing */
+
+html.welcome-locked,
+body.welcome-locked {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+    touch-action: none;
+}
+
+body.welcome-locked {
+    position: fixed;
+    inset: 0;
+}
+
+/* Full-screen welcome layer */
+
+.welcome-screen {
+    position: fixed;
+    z-index: 9999;
+    inset: 0;
+
+    display: grid;
+    place-items: center;
+
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+
+    padding: 24px;
+    overflow: hidden;
+
+    border: 0;
+    outline: none;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            #68393c 0%,
+            #4a2529 66%,
+            #351b20 100%
+        );
+
+    color: #f5e8c8;
+
+    cursor: pointer;
+    user-select: none;
+
+    -webkit-tap-highlight-color: transparent;
+
+    touch-action: none;
+    overscroll-behavior: contain;
+
+    opacity: 1;
+    visibility: visible;
+
+    transition:
+        opacity .9s ease,
+        visibility .9s ease;
+}
+
+/* Elegant double border */
+
+.welcome-screen::before,
+.welcome-screen::after {
+    position: absolute;
+    inset: 18px;
+
+    border: 1px solid rgba(220, 190, 119, .35);
+
+    content: '';
+    pointer-events: none;
+}
+
+.welcome-screen::after {
+    inset: 26px;
+    border-color: rgba(220, 190, 119, .16);
+}
+
+/* Central logo */
+
+.welcome-center {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: min(90%, 440px);
+
+    text-align: center;
+
+    animation:
+        welcomeLogoEnter
+        1.25s cubic-bezier(.2, .75, .25, 1)
+        both;
+}
+
+/* Matching the existing website monogram */
+
+.welcome-monogram {
+    color: #e8c96c;
+
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(82px, 22vw, 118px);
+    font-weight: 600;
+
+    letter-spacing: -5px;
+    line-height: 1.15;
+
+    text-shadow:
+        0 8px 30px rgba(0, 0, 0, .16);
+}
+
+.welcome-monogram span {
+    display: inline-block;
+
+    padding: 0 .08em;
+
+    color: #f0d58a;
+    font-size: .58em;
+    font-weight: 500;
+
+    vertical-align: .12em;
+}
+
+/* Gold decorative divider */
+
+.welcome-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 13px;
+
+    margin: 26px auto 35px;
+
+    color: #d8b76c;
+    font-size: 18px;
+}
+
+.welcome-divider i {
+    display: block;
+
+    width: 48px;
+    height: 1px;
+
+    background: #b99754;
+}
+
+/* Tap instruction */
+
+.welcome-tap-text {
+    margin: 0;
+
+    color: #f0dcae;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 3px;
+    line-height: 1.8;
+
+    text-transform: uppercase;
+
+    animation:
+        tapTextPulse
+        2s ease-in-out infinite;
+}
+
+/* Small animated indicator */
+
+.welcome-tap-indicator {
+    display: inline-block;
+
+    margin-top: 17px;
+
+    color: #d8b76c;
+    font-family: 'Poppins', sans-serif;
+    font-size: 25px;
+
+    animation:
+        tapArrow
+        1.5s ease-in-out infinite;
+}
+
+/* Opening transition */
+
+.welcome-screen.is-opening {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.welcome-screen.is-opening .welcome-center {
+    opacity: 0;
+    transform: translateY(-12px) scale(.94);
+
+    transition:
+        opacity .55s ease,
+        transform .65s ease;
+}
+
+/* Welcome animations */
+
+@keyframes welcomeLogoEnter {
+    from {
+        opacity: 0;
+        transform: translateY(22px) scale(.94);
+        filter: blur(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes tapTextPulse {
+    0%, 100% {
+        opacity: .7;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes tapArrow {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: .65;
+    }
+
+    50% {
+        transform: translateY(7px);
+        opacity: 1;
+    }
+}
+
+/* ==========================================
+   FLOATING MUSIC CONTROL
+========================================== */
+
+.music-toggle {
+    position: fixed;
+    z-index: 80;
+
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    min-height: 44px;
+    padding: 10px 15px;
+
+    border: 1px solid #d8b76c;
+    border-radius: 24px;
+
+    background: rgba(74, 37, 41, .96);
+
+    box-shadow:
+        0 5px 20px rgba(35, 15, 18, .2);
+
+    color: #f5e2c0;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.music-toggle[hidden] {
+    display: none !important;
+}
+
+.music-toggle:active {
+    transform: scale(.97);
+}
+
+.music-toggle:focus-visible {
+    outline: 2px solid #f0d58a;
+    outline-offset: 3px;
+}
+
+.music-toggle-icon {
+    display: inline-grid;
+    place-items: center;
+
+    width: 21px;
+    height: 21px;
+
+    border: 1px solid currentColor;
+    border-radius: 50%;
+
+    font-size: 11px;
+    line-height: 1;
+}
+
+/* ==========================================
+   MOBILE OPTIMIZATION
+========================================== */
+
+@media (max-width: 700px) {
+
+    .welcome-screen::before {
+        inset: 13px;
+    }
+
+    .welcome-screen::after {
+        inset: 20px;
+    }
+
+    .welcome-monogram {
+        font-size: clamp(82px, 25vw, 112px);
+    }
+
+    .welcome-divider {
+        margin: 22px auto 29px;
+    }
+
+    .welcome-tap-text {
+        font-size: 9px;
+        letter-spacing: 2.5px;
+    }
+
+    .music-toggle {
+        right: max(13px, env(safe-area-inset-right));
+        bottom: max(13px, env(safe-area-inset-bottom));
+
+        min-height: 42px;
+        padding: 9px 13px;
+
+        font-size: 10px;
+    }
+}
+
+/* Accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .welcome-center,
+    .welcome-tap-text,
+    .welcome-tap-indicator {
+        animation: none !important;
+    }
+
+    .welcome-screen,
+    .welcome-screen.is-opening .welcome-center {
+        transition-duration: .01ms !important;
+    }
+}

@@ -1,22 +1,34 @@
 
 // ==========================================
-// WEDDING COUNTDOWN
-// Wedding time: 25 November 2026, 2:00 PM IST
+// SUNNY & DIPTI WEDDING INVITATION
+// Countdown, scroll reveals, video and music
 // ==========================================
 
-const weddingDate = new Date("2026-11-25T14:00:00+05:30").getTime();
-const countdownElement = document.getElementById("countdown");
+
+// ------------------------------------------
+// WEDDING COUNTDOWN
+// 25 November 2026, 2:00 PM IST
+// ------------------------------------------
+
+const weddingDate = new Date(
+    "2026-11-25T14:00:00+05:30"
+).getTime();
+
+const countdownElement =
+    document.getElementById("countdown");
+
 
 function updateCountdown() {
 
     if (!countdownElement) return;
 
-    const now = Date.now();
-    const difference = weddingDate - now;
+    const difference = weddingDate - Date.now();
 
     if (difference <= 0) {
+
         countdownElement.innerHTML =
             '<p class="countdown-finished">The celebration has begun!</p>';
+
         return;
     }
 
@@ -31,13 +43,19 @@ function updateCountdown() {
 
     for (const [unit, milliseconds] of Object.entries(units)) {
 
-        const value = Math.floor(remaining / milliseconds);
+        const value = Math.floor(
+            remaining / milliseconds
+        );
+
         remaining %= milliseconds;
 
         const element = document.getElementById(unit);
 
         if (element) {
-            element.textContent = String(value).padStart(2, "0");
+
+            element.textContent =
+                String(value).padStart(2, "0");
+
         }
     }
 }
@@ -48,8 +66,506 @@ window.setInterval(updateCountdown, 1000);
 
 
 // ==========================================
-// SCROLL-REVEAL ANIMATIONS
-// Website opens directly without interaction.
+// WELCOME SCREEN + BACKGROUND MUSIC
+// ==========================================
+
+const welcomeScreen =
+    document.getElementById("welcomeScreen");
+
+const backgroundMusic =
+    document.getElementById("backgroundMusic");
+
+const musicToggle =
+    document.getElementById("musicToggle");
+
+const musicToggleIcon =
+    document.getElementById("musicToggleIcon");
+
+const musicToggleLabel =
+    document.getElementById("musicToggleLabel");
+
+
+let welcomeIsOpen = Boolean(welcomeScreen);
+
+let musicHasEnded = false;
+
+let shouldResumeAfterVideo = false;
+
+
+if (backgroundMusic) {
+
+    // Never repeat the song.
+    backgroundMusic.loop = false;
+
+    // Comfortable starting volume.
+    backgroundMusic.volume = 0.8;
+
+    backgroundMusic.preload = "auto";
+}
+
+
+// Keep the invitation at the top
+// while the welcome screen is visible.
+
+if (welcomeIsOpen) {
+
+    if ("scrollRestoration" in history) {
+        history.scrollRestoration = "manual";
+    }
+
+    window.scrollTo(0, 0);
+}
+
+
+// ------------------------------------------
+// UPDATE MUSIC BUTTON
+// ------------------------------------------
+
+function updateMusicControl() {
+
+    if (!musicToggle || !backgroundMusic) return;
+
+    // Song has reached its end.
+    if (musicHasEnded || backgroundMusic.ended) {
+
+        musicToggleIcon.textContent = "✓";
+
+        musicToggleLabel.textContent =
+            "Song finished";
+
+        musicToggle.setAttribute(
+            "aria-label",
+            "The wedding song has finished"
+        );
+
+        musicToggle.setAttribute(
+            "aria-pressed",
+            "false"
+        );
+
+        musicToggle.disabled = true;
+
+        musicHasEnded = true;
+
+        return;
+    }
+
+    musicToggle.disabled = false;
+
+    // Song is paused.
+    if (backgroundMusic.paused) {
+
+        musicToggleIcon.textContent = "▶";
+
+        musicToggleLabel.textContent =
+            "Play music";
+
+        musicToggle.setAttribute(
+            "aria-label",
+            "Play wedding music"
+        );
+
+        musicToggle.setAttribute(
+            "aria-pressed",
+            "false"
+        );
+
+    }
+
+    // Song is playing.
+    else {
+
+        musicToggleIcon.textContent = "Ⅱ";
+
+        musicToggleLabel.textContent =
+            "Pause music";
+
+        musicToggle.setAttribute(
+            "aria-label",
+            "Pause wedding music"
+        );
+
+        musicToggle.setAttribute(
+            "aria-pressed",
+            "true"
+        );
+
+    }
+}
+
+
+// ------------------------------------------
+// PLAY BACKGROUND MUSIC
+// ------------------------------------------
+
+function attemptMusicPlayback() {
+
+    if (
+        !backgroundMusic ||
+        musicHasEnded ||
+        backgroundMusic.ended
+    ) {
+
+        updateMusicControl();
+
+        return;
+    }
+
+    /*
+       IMPORTANT:
+
+       play() is called directly inside the visitor's
+       tap interaction.
+
+       This is what allows mobile browsers to permit
+       audible playback.
+    */
+
+    let playPromise;
+
+    try {
+
+        playPromise = backgroundMusic.play();
+
+    } catch (error) {
+
+        console.warn(
+            "Wedding music could not start:",
+            error
+        );
+
+        updateMusicControl();
+
+        return;
+    }
+
+    if (
+        playPromise &&
+        typeof playPromise.then === "function"
+    ) {
+
+        playPromise
+            .then(updateMusicControl)
+            .catch((error) => {
+
+                console.warn(
+                    "Wedding music did not start:",
+                    error
+                );
+
+                // Guest can try using the music button.
+                updateMusicControl();
+
+            });
+
+    } else {
+
+        updateMusicControl();
+
+    }
+}
+
+
+// ------------------------------------------
+// OPEN INVITATION
+// ------------------------------------------
+
+function openInvitationFromWelcome() {
+
+    if (!welcomeIsOpen || !welcomeScreen) return;
+
+    // Start music immediately from the tap.
+    attemptMusicPlayback();
+
+    welcomeIsOpen = false;
+
+    // Unlock the background website.
+    document.documentElement.classList.remove(
+        "welcome-locked"
+    );
+
+    document.body.classList.remove(
+        "welcome-locked"
+    );
+
+    // Start smooth welcome-screen exit.
+    welcomeScreen.classList.add("is-opening");
+
+    // Show music control.
+    if (musicToggle) {
+
+        musicToggle.hidden = false;
+
+        updateMusicControl();
+
+    }
+
+    // Remove overlay after transition.
+    window.setTimeout(() => {
+
+        welcomeScreen.remove();
+
+        window.scrollTo(0, 0);
+
+    }, 950);
+}
+
+
+// ------------------------------------------
+// TAP ANYWHERE TO OPEN
+// ------------------------------------------
+
+if (welcomeScreen) {
+
+    let pointerStart = null;
+
+    // Detect initial tap position.
+    welcomeScreen.addEventListener(
+        "pointerdown",
+        (event) => {
+
+            if (
+                event.pointerType === "mouse" &&
+                event.button !== 0
+            ) {
+                return;
+            }
+
+            pointerStart = {
+                x: event.clientX,
+                y: event.clientY
+            };
+
+        }
+    );
+
+
+    // A short tap opens the invitation.
+    // A swipe does not accidentally open it.
+    welcomeScreen.addEventListener(
+        "pointerup",
+        (event) => {
+
+            if (!pointerStart) return;
+
+            const deltaX = Math.abs(
+                event.clientX - pointerStart.x
+            );
+
+            const deltaY = Math.abs(
+                event.clientY - pointerStart.y
+            );
+
+            pointerStart = null;
+
+            if (
+                deltaX <= 12 &&
+                deltaY <= 12
+            ) {
+
+                openInvitationFromWelcome();
+
+            }
+
+        }
+    );
+
+
+    welcomeScreen.addEventListener(
+        "pointercancel",
+        () => {
+            pointerStart = null;
+        }
+    );
+
+
+    // Keyboard support.
+    welcomeScreen.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                event.key === "Enter" ||
+                event.key === " "
+            ) {
+
+                event.preventDefault();
+
+                openInvitationFromWelcome();
+
+            }
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// PREVENT BACKGROUND SCROLLING
+// WHILE WELCOME SCREEN IS OPEN
+// ==========================================
+
+function preventScrollWhileWelcomeIsOpen(event) {
+
+    if (welcomeIsOpen) {
+
+        event.preventDefault();
+
+    }
+}
+
+
+// Block mouse wheel scrolling.
+
+document.addEventListener(
+    "wheel",
+    preventScrollWhileWelcomeIsOpen,
+    {
+        passive: false,
+        capture: true
+    }
+);
+
+
+// Block mobile touch scrolling.
+
+document.addEventListener(
+    "touchmove",
+    preventScrollWhileWelcomeIsOpen,
+    {
+        passive: false,
+        capture: true
+    }
+);
+
+
+// Block keyboard scrolling.
+
+document.addEventListener(
+    "keydown",
+    (event) => {
+
+        if (!welcomeIsOpen) return;
+
+        const scrollingKeys = [
+            "ArrowUp",
+            "ArrowDown",
+            "PageUp",
+            "PageDown",
+            "Home",
+            "End"
+        ];
+
+        if (scrollingKeys.includes(event.key)) {
+
+            event.preventDefault();
+
+        }
+
+    },
+    {
+        capture: true
+    }
+);
+
+
+// ==========================================
+// MUSIC PAUSE / RESUME BUTTON
+// ==========================================
+
+musicToggle?.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !backgroundMusic ||
+            musicHasEnded ||
+            backgroundMusic.ended
+        ) {
+
+            updateMusicControl();
+
+            return;
+        }
+
+        // Resume from the paused position.
+        if (backgroundMusic.paused) {
+
+            attemptMusicPlayback();
+
+        }
+
+        // Pause without resetting playback position.
+        else {
+
+            backgroundMusic.pause();
+
+            updateMusicControl();
+
+        }
+
+    }
+);
+
+
+// Update button when audio changes state.
+
+backgroundMusic?.addEventListener(
+    "play",
+    updateMusicControl
+);
+
+backgroundMusic?.addEventListener(
+    "pause",
+    updateMusicControl
+);
+
+
+// Stop permanently when the song finishes.
+
+backgroundMusic?.addEventListener(
+    "ended",
+    () => {
+
+        musicHasEnded = true;
+
+        updateMusicControl();
+
+    }
+);
+
+
+// Detect missing audio file.
+
+backgroundMusic?.addEventListener(
+    "error",
+    () => {
+
+        console.error(
+            "Could not load assets/wedding-song.mp3. Check the filename and assets folder."
+        );
+
+        if (musicToggle) {
+
+            musicToggleIcon.textContent = "!";
+
+            musicToggleLabel.textContent =
+                "Music unavailable";
+
+            musicToggle.setAttribute(
+                "aria-label",
+                "Wedding music file could not be loaded"
+            );
+
+        }
+
+    }
+);
+
+
+// ==========================================
+// SCROLL REVEAL ANIMATIONS
 // ==========================================
 
 const revealElements = document.querySelectorAll(`
@@ -68,6 +584,7 @@ const revealElements = document.querySelectorAll(`
     .closing
 `);
 
+
 revealElements.forEach((element, index) => {
 
     element.classList.add("scroll-reveal");
@@ -75,16 +592,19 @@ revealElements.forEach((element, index) => {
     if (element.classList.contains("photo-card")) {
 
         element.classList.add(
-            index % 2 === 0 ? "scroll-left" : "scroll-right"
+            index % 2 === 0
+                ? "scroll-left"
+                : "scroll-right"
         );
 
     }
+
 });
+
 
 if ("IntersectionObserver" in window) {
 
     const scrollObserver = new IntersectionObserver(
-
         (entries, observer) => {
 
             entries.forEach((entry) => {
@@ -100,7 +620,6 @@ if ("IntersectionObserver" in window) {
             });
 
         },
-
         {
             threshold: 0.12,
             rootMargin: "0px 0px -40px 0px"
@@ -108,14 +627,18 @@ if ("IntersectionObserver" in window) {
     );
 
     revealElements.forEach((element) => {
+
         scrollObserver.observe(element);
+
     });
 
 } else {
 
     // Fallback for older browsers.
     revealElements.forEach((element) => {
+
         element.classList.add("visible");
+
     });
 
 }
@@ -123,7 +646,6 @@ if ("IntersectionObserver" in window) {
 
 // ==========================================
 // WEDDING VIDEO MODAL
-// Opens when visitor taps Watch Wedding Video.
 // ==========================================
 
 const openWeddingVideoButton =
@@ -139,80 +661,138 @@ const weddingVideo =
     document.getElementById("weddingVideo");
 
 
-// Close video and stop playback.
 function closeWeddingVideo() {
 
-    if (weddingVideo && !weddingVideo.paused) {
+    if (
+        weddingVideo &&
+        !weddingVideo.paused
+    ) {
+
         weddingVideo.pause();
+
     }
 
     if (weddingVideoDialog?.open) {
+
         weddingVideoDialog.close();
+
     }
+
 }
 
 
-// Open video when the button is tapped.
-openWeddingVideoButton?.addEventListener("click", async () => {
+// Open the invitation video.
 
-    if (!weddingVideoDialog) return;
+openWeddingVideoButton?.addEventListener(
+    "click",
+    async () => {
 
-    if (typeof weddingVideoDialog.showModal === "function") {
+        if (!weddingVideoDialog) return;
 
-        weddingVideoDialog.showModal();
+        // Pause background music when the video plays,
+        // so both audio tracks do not overlap.
 
-    } else {
+        shouldResumeAfterVideo = Boolean(
+            backgroundMusic &&
+            !backgroundMusic.paused &&
+            !musicHasEnded
+        );
 
-        // Fallback for older browsers.
-        weddingVideoDialog.setAttribute("open", "");
+        if (shouldResumeAfterVideo) {
 
-    }
+            backgroundMusic.pause();
 
-    // Start playback after the visitor's tap.
-    if (weddingVideo) {
+            updateMusicControl();
 
-        try {
+        }
 
-            await weddingVideo.play();
+        if (
+            typeof weddingVideoDialog.showModal === "function"
+        ) {
 
-        } catch (error) {
+            weddingVideoDialog.showModal();
 
-            // Visitor can use the visible video controls
-            // if automatic playback is unavailable.
-            console.info(
-                "Tap the video play control to start playback.",
-                error
+        } else {
+
+            weddingVideoDialog.setAttribute(
+                "open",
+                ""
             );
 
         }
 
-    }
+        if (weddingVideo) {
 
-});
+            try {
+
+                await weddingVideo.play();
+
+            } catch (error) {
+
+                console.info(
+                    "Tap the video play control to start playback.",
+                    error
+                );
+
+            }
+
+        }
+
+    }
+);
 
 
 // Close button.
+
 closeWeddingVideoButton?.addEventListener(
     "click",
     closeWeddingVideo
 );
 
 
-// Close when tapping outside the video.
-weddingVideoDialog?.addEventListener("click", (event) => {
+// Close by tapping outside the video.
 
-    if (event.target === weddingVideoDialog) {
-        closeWeddingVideo();
+weddingVideoDialog?.addEventListener(
+    "click",
+    (event) => {
+
+        if (event.target === weddingVideoDialog) {
+
+            closeWeddingVideo();
+
+        }
+
     }
+);
 
-});
 
+// Pause video and resume background song
+// from its previous position when the video closes.
 
-// Pause video whenever dialog closes.
-weddingVideoDialog?.addEventListener("close", () => {
+weddingVideoDialog?.addEventListener(
+    "close",
+    () => {
 
-    if (weddingVideo && !weddingVideo.paused) {
-        weddingVideo.pause();
+        if (
+            weddingVideo &&
+            !weddingVideo.paused
+        ) {
+
+            weddingVideo.pause();
+
+        }
+
+        if (
+            shouldResumeAfterVideo &&
+            backgroundMusic &&
+            !musicHasEnded
+        ) {
+
+            attemptMusicPlayback();
+
+        }
+
+        shouldResumeAfterVideo = false;
+
     }
-
-});
+);
