@@ -1502,7 +1502,7 @@ footer a {
    SUNNY & DIPTI - WELCOME SCREEN
 ========================================== */
 
-/* Lock the entire page while welcome screen is showing */
+/* Lock scrolling while welcome screen is showing */
 
 html.welcome-locked,
 body.welcome-locked {
@@ -1514,9 +1514,10 @@ body.welcome-locked {
     touch-action: none;
 }
 
+/* Avoid fixed-body positioning because it can
+   cause viewport and scroll jumps on mobile browsers. */
 body.welcome-locked {
-    position: fixed;
-    inset: 0;
+    position: relative;
 }
 
 /* Full-screen welcome layer */
@@ -1696,9 +1697,11 @@ body.welcome-locked {
 /* Opening transition */
 
 .welcome-screen.is-opening {
-    visibility: hidden;
     opacity: 0;
-    pointer-events: none;
+
+    /* Keep intercepting taps until the overlay
+       is removed from the page by JavaScript. */
+    pointer-events: auto;
 }
 
 .welcome-screen.is-opening .welcome-center {

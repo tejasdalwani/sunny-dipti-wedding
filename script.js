@@ -341,43 +341,51 @@ if (welcomeScreen) {
 
 
     // A short tap opens the invitation.
-    // A swipe does not accidentally open it.
-    welcomeScreen.addEventListener(
-        "pointerup",
-        (event) => {
+// A swipe does not accidentally open it.
+welcomeScreen.addEventListener(
+    "pointerup",
+    (event) => {
 
-            if (!pointerStart) return;
+        if (!pointerStart) return;
 
-            const deltaX = Math.abs(
-                event.clientX - pointerStart.x
-            );
+        const deltaX = Math.abs(
+            event.clientX - pointerStart.x
+        );
 
-            const deltaY = Math.abs(
-                event.clientY - pointerStart.y
-            );
+        const deltaY = Math.abs(
+            event.clientY - pointerStart.y
+        );
 
-            pointerStart = null;
+        pointerStart = null;
 
-            if (
-                deltaX <= 12 &&
-                deltaY <= 12
-            ) {
+        if (
+            deltaX <= 12 &&
+            deltaY <= 12
+        ) {
 
-                openInvitationFromWelcome();
+            // Prevent the same tap from activating
+            // a button underneath the welcome screen.
+            event.preventDefault();
+            event.stopPropagation();
 
-            }
+            openInvitationFromWelcome();
 
         }
-    );
+
+    }
+);
 
 
-    welcomeScreen.addEventListener(
-        "pointercancel",
-        () => {
-            pointerStart = null;
-        }
-    );
-
+// Prevent clicks on the welcome screen from
+// reaching elements underneath it during its exit.
+welcomeScreen.addEventListener(
+    "click",
+    (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+    },
+    true
+);
 
     // Keyboard support.
     welcomeScreen.addEventListener(
@@ -660,6 +668,55 @@ const weddingVideoDialog =
 const weddingVideo =
     document.getElementById("weddingVideo");
 
+// ==========================================
+// PAUSE MEDIA WHEN VISITOR LEAVES THE WEBSITE
+// ==========================================
+
+let pageIsHidden = false;
+
+function pauseMediaWhenPageHidden() {
+
+    pageIsHidden = true;
+
+    // Stop background music.
+    if (backgroundMusic && !backgroundMusic.paused) {
+        backgroundMusic.pause();
+        updateMusicControl();
+    }
+
+    // Stop invitation video.
+    if (weddingVideo && !weddingVideo.paused) {
+        weddingVideo.pause();
+    }
+
+    // Do not automatically restart music
+    // when the visitor returns to the website.
+    shouldResumeAfterVideo = false;
+}
+
+
+// Detect when the visitor switches apps,
+// presses Home, or moves to another tab.
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        if (document.hidden) {
+            pauseMediaWhenPageHidden();
+        } else {
+            pageIsHidden = false;
+        }
+
+    }
+);
+
+
+// Also handle the browser unloading the page.
+window.addEventListener(
+    "pagehide",
+    pauseMediaWhenPageHidden
+);
+
 
 function closeWeddingVideo() {
 
@@ -785,7 +842,9 @@ weddingVideoDialog?.addEventListener(
         if (
             shouldResumeAfterVideo &&
             backgroundMusic &&
-            !musicHasEnded
+            !musicHasEnded &&
+            !pageIsHidden &&
+            !document.hidden
         ) {
 
             attemptMusicPlayback();
